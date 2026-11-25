@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Battery Alarm</string>
+    <string name="start_monitoring">Avvia Monitoraggio</string>
+    <string name="stop_monitoring">Ferma Monitoraggio</string>
+    <string name="close_app">Chiudi app</string>
+    <string name="stop_alarm">Ferma allarme</string>
+    <string name="battery_placeholder">Batteria: --%</string>
+    <string name="status_placeholder">--</string>
+    <string name="battery_level">Batteria: %d%%</string>
+    <string name="charging">In carica</string>
+    <string name="not_charging">Non in carica</string>
+    <string name="alarm_title">Batteria all\'80%!</string>
+    <string name="alarm_message">Scollega il caricatore</string>
+    <string name="channel_name">Battery Alarm</string>
+    <string name="channel_desc">Notifiche allarme batteria</string>
+    <string name="fg_channel_name">Monitoraggio Batteria</string>
+    <string name="fg_channel_desc">Servizio monitoraggio batteria in background</string>
+    <string name="fg_title">Battery Alarm attivo</string>
+    <string name="fg_text">%1$s, %2$d%%</string>
+    <string name="notifications_denied">Senza notifiche l\'allarme potrebbe non essere visibile</string>
+</resources>

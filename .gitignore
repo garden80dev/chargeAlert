@@ -1,0 +1,20 @@
+# Gradle / build
+.gradle/
+.kotlin/
+build/
+app/build/
+
+# Configurazione locale (percorso SDK, specifica della macchina)
+local.properties
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# macOS
+.DS_Store
+
+# Chiavi di firma
+*.jks
+*.keystore
