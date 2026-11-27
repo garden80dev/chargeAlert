@@ -6,15 +6,19 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
-import android.os.BatteryManager
 import android.os.Build
 import android.os.Bundle
-import android.widget.Button
-import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
+import com.example.batteryalarm.ui.BatteryAlarmTheme
+import com.example.batteryalarm.ui.BatteryScreen
 
 class MainActivity : ComponentActivity() {
 
@@ -22,14 +26,12 @@ class MainActivity : ComponentActivity() {
         const val EXTRA_STOP_ALARM = "STOP_ALARM"
     }
 
-    private lateinit var tvLevel: TextView
-    private lateinit var tvStatus: TextView
-    private lateinit var btnToggle: Button
+    private var battery by mutableStateOf(BatteryState.Unknown)
     private var receiverRegistered = false
 
     private val batteryReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            updateBatteryUi(intent)
+            BatteryState.fromIntent(intent)?.let { battery = it }
         }
     }
 
@@ -42,12 +44,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        tvLevel = findViewById(R.id.tvBatteryLevel)
-        tvStatus = findViewById(R.id.tvChargingStatus)
-        btnToggle = findViewById(R.id.btnToggle)
-
         handleStopAlarm(intent)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
@@ -57,19 +53,27 @@ class MainActivity : ComponentActivity() {
             notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
 
-        btnToggle.setOnClickListener {
-            // Lo stato del servizio cambia in modo asincrono: aggiorna in base all'azione
-            val starting = !BatteryMonitorService.isRunning
-            if (starting) startMonitoring() else stopMonitoring()
-            updateToggleText(starting)
+        setContent {
+            val monitoring by BatteryMonitorService.running.collectAsState()
+            val ringing by AlarmHelper.ringing.collectAsState()
+            BatteryAlarmTheme {
+                BatteryScreen(
+                    battery = battery,
+                    monitoring = monitoring,
+                    ringing = ringing,
+                    threshold = BatteryMonitorService.BATTERY_THRESHOLD,
+                    onToggleMonitoring = {
+                        if (BatteryMonitorService.isRunning) stopMonitoring() else startMonitoring()
+                    },
+                    onStopAlarm = { AlarmHelper.cancelAlarm(this) },
+                    onClose = ::closeApp,
+                )
+            }
         }
-
-        findViewById<Button>(R.id.btnClose).setOnClickListener { closeApp() }
     }
 
     override fun onResume() {
         super.onResume()
-        updateToggleText(BatteryMonitorService.isRunning)
         if (!receiverRegistered) {
             val sticky = ContextCompat.registerReceiver(
                 this, batteryReceiver,
@@ -77,7 +81,7 @@ class MainActivity : ComponentActivity() {
                 ContextCompat.RECEIVER_NOT_EXPORTED
             )
             receiverRegistered = true
-            sticky?.let { updateBatteryUi(it) }
+            sticky?.let(BatteryState::fromIntent)?.let { battery = it }
         }
     }
 
@@ -125,21 +129,5 @@ class MainActivity : ComponentActivity() {
             try { unregisterReceiver(batteryReceiver) } catch (_: IllegalArgumentException) {}
             receiverRegistered = false
         }
-    }
-
-    private fun updateToggleText(running: Boolean) {
-        btnToggle.setText(if (running) R.string.stop_monitoring else R.string.start_monitoring)
-    }
-
-    private fun updateBatteryUi(intent: Intent) {
-        val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
-        val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, 100)
-        val status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
-        if (level < 0 || scale <= 0) return
-        val percent = (level * 100) / scale
-        val isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
-                status == BatteryManager.BATTERY_STATUS_FULL
-        tvLevel.text = getString(R.string.battery_level, percent)
-        tvStatus.setText(if (isCharging) R.string.charging else R.string.not_charging)
     }
 }

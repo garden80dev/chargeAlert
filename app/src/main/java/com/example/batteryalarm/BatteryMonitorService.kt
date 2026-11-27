@@ -10,12 +10,14 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ServiceInfo
-import android.os.BatteryManager
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 class BatteryMonitorService : Service() {
 
@@ -23,12 +25,13 @@ class BatteryMonitorService : Service() {
         const val ACTION_STOP_ALARM = "com.example.batteryalarm.action.STOP_ALARM"
         private const val FG_CHANNEL_ID = "battery_monitor_fg"
         private const val FG_NOTIFICATION_ID = 1001
-        private const val BATTERY_THRESHOLD = 80
+        const val BATTERY_THRESHOLD = 80
 
-        /** Stato letto dalla UI per mostrare il pulsante corretto. */
-        @Volatile
-        var isRunning = false
-            private set
+        private val _running = MutableStateFlow(false)
+
+        /** Stato osservato dalla UI per mostrare il pulsante corretto. */
+        val running: StateFlow<Boolean> = _running.asStateFlow()
+        val isRunning: Boolean get() = _running.value
     }
 
     private var alarmFired = false
@@ -36,7 +39,7 @@ class BatteryMonitorService : Service() {
 
     private val batteryReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            handleBatteryIntent(intent)
+            BatteryState.fromIntent(intent)?.let { handleBattery(it) }
         }
     }
 
@@ -63,7 +66,7 @@ class BatteryMonitorService : Service() {
         ServiceCompat.startForeground(
             this, FG_NOTIFICATION_ID, buildForegroundNotification(0, false), type
         )
-        isRunning = true
+        _running.value = true
 
         if (!receiverRegistered) {
             // ACTION_BATTERY_CHANGED è sticky: il valore di ritorno contiene già lo stato attuale
@@ -73,7 +76,7 @@ class BatteryMonitorService : Service() {
                 ContextCompat.RECEIVER_NOT_EXPORTED
             )
             receiverRegistered = true
-            sticky?.let { handleBatteryIntent(it) }
+            sticky?.let(BatteryState::fromIntent)?.let { handleBattery(it) }
         }
         return START_STICKY
     }
@@ -85,20 +88,15 @@ class BatteryMonitorService : Service() {
         }
         AlarmHelper.cancelAlarm(this)
         ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
-        isRunning = false
+        _running.value = false
         super.onDestroy()
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
 
-    private fun handleBatteryIntent(intent: Intent) {
-        val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
-        val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, 100)
-        val status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
-        if (level < 0 || scale <= 0) return
-        val percent = (level * 100) / scale
-        val isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
-                status == BatteryManager.BATTERY_STATUS_FULL
+    private fun handleBattery(state: BatteryState) {
+        val percent = state.percent
+        val isCharging = state.charging
 
         if (isCharging && percent >= BATTERY_THRESHOLD && !alarmFired) {
             alarmFired = true

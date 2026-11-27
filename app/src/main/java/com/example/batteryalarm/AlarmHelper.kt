@@ -10,6 +10,9 @@ import android.media.MediaPlayer
 import android.media.RingtoneManager
 import android.os.PowerManager
 import androidx.core.app.NotificationCompat
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 object AlarmHelper {
     private const val CHANNEL_ID = "battery_alarm_channel"
@@ -18,6 +21,11 @@ object AlarmHelper {
 
     private var mediaPlayer: MediaPlayer? = null
     private var wakeLock: PowerManager.WakeLock? = null
+
+    private val _ringing = MutableStateFlow(false)
+
+    /** true mentre l'allarme è attivo; osservato dalla UI. */
+    val ringing: StateFlow<Boolean> = _ringing.asStateFlow()
 
     fun createNotificationChannel(context: Context) {
         val channel = NotificationChannel(
@@ -38,6 +46,7 @@ object AlarmHelper {
         acquireWakeLock(appContext)
         startAlarmSound(appContext)
         showNotification(appContext)
+        _ringing.value = true
     }
 
     /** Ferma suono, rilascia il wake lock e rimuove la notifica. Sicura da chiamare più volte. */
@@ -46,6 +55,7 @@ object AlarmHelper {
         stopAlarmSound()
         releaseWakeLock()
         context.getSystemService(NotificationManager::class.java).cancel(NOTIFICATION_ID)
+        _ringing.value = false
     }
 
     private fun acquireWakeLock(context: Context) {

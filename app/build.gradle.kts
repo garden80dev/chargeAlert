@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.compose")
 }
 android {
     namespace = "com.example.batteryalarm"
@@ -11,13 +12,16 @@ android {
         applicationId = "com.example.batteryalarm"
         minSdk = 30
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.1"
+        versionCode = 3
+        versionName = "1.2"
     }
     buildTypes {
         release {
             isMinifyEnabled = false
         }
+    }
+    buildFeatures {
+        compose = true
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -30,9 +34,9 @@ kotlin {
     }
 }
 dependencies {
-    implementation("androidx.wear:wear:1.3.0")
     implementation("androidx.core:core-ktx:1.15.0")
-    implementation("androidx.activity:activity-ktx:1.9.3")
-    // androidx.wear porta fragment 1.2.4, troppo vecchio per le Activity Result API
-    implementation("androidx.fragment:fragment-ktx:1.8.5")
+    implementation("androidx.activity:activity-compose:1.9.3")
+    // Compose per Wear OS, Material 3 Expressive (stile Wear OS 6 / Pixel Watch 4)
+    implementation("androidx.wear.compose:compose-material3:1.6.2")
+    implementation("androidx.wear.compose:compose-foundation:1.6.2")
 }

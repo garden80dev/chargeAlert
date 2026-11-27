@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Icona: una foglia (risparmio) attraversata da un fulmine (ricarica),
+  dentro un anello che si riempie dal rosso al verde e si ferma all'80%.
+  L'ultimo 20% è la zona magenta da evitare, come nell'app.
+  Tutto il disegno sta nel cerchio sicuro di 66dp al centro.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Anello ruotato di 90°: parte dal basso e gira in senso orario -->
+    <group
+        android:pivotX="54"
+        android:pivotY="54"
+        android:rotation="90">
+
+        <!-- Zona oltre l'80% -->
+        <path
+            android:pathData="M69.6574,30.7869 A28,28 0 0,1 81.7275,50.1032"
+            android:strokeWidth="5.5"
+            android:strokeColor="#FFFF2DAA"
+            android:strokeAlpha="0.55"
+            android:strokeLineCap="round" />
+
+        <!-- Arco di carica: 0-80% -->
+        <path
+            android:pathData="M81.7275,57.8968 A28,28 0 1,1 62.6525,27.3704"
+            android:strokeWidth="5.5"
+            android:strokeLineCap="round">
+            <aapt:attr name="android:strokeColor">
+                <gradient
+                    android:type="sweep"
+                    android:centerX="54"
+                    android:centerY="54">
+                    <item android:offset="0" android:color="#FFFF3B6B" />
+                    <item android:offset="0.022" android:color="#FFFF3B6B" />
+                    <item android:offset="0.333" android:color="#FFFF9F0A" />
+                    <item android:offset="0.567" android:color="#FFFFE135" />
+                    <item android:offset="0.8" android:color="#FF3CF28B" />
+                    <item android:offset="1" android:color="#FF3CF28B" />
+                </gradient>
+            </aapt:attr>
+        </path>
+
+        <!-- Punto luminoso all'80% -->
+        <path
+            android:fillColor="#FF3CF28B"
+            android:fillAlpha="0.35"
+            android:pathData="M62.6525,27.3704m-6,0a6,6 0 1,1 12,0a6,6 0 1,1 -12,0" />
+        <path
+            android:fillColor="#FF3CF28B"
+            android:pathData="M62.6525,27.3704m-4,0a4,4 0 1,1 8,0a4,4 0 1,1 -8,0" />
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M62.6525,27.3704m-2,0a2,2 0 1,1 4,0a2,2 0 1,1 -4,0" />
+    </group>
+
+    <!-- Gambo della foglia -->
+    <path
+        android:pathData="M42,66 L37.5,70.5"
+        android:strokeWidth="2.4"
+        android:strokeColor="#FF3CF28B"
+        android:strokeLineCap="round" />
+
+    <!-- Foglia -->
+    <path android:pathData="M42,66 C42,50 50,42 66,42 C66,58 58,66 42,66 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="42"
+                android:startY="66"
+                android:endX="66"
+                android:endY="42">
+                <item android:offset="0" android:color="#FF3CF28B" />
+                <item android:offset="1" android:color="#FF00E0FF" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Fulmine ritagliato nella foglia, nel colore dello sfondo -->
+    <path
+        android:fillColor="#FF120B2E"
+        android:pathData="M57.2,44.8 L49.4,55.3 L54.4,55.3 L51.8,63.6 L59.6,52.4 L54.7,52.4 Z" />
+</vector>
